@@ -64,7 +64,7 @@ public class Main {
     }
     private static void startTranser(String threadName) {
         double getBankProfit = 0.0;
-        while (getBankProfit <= bankProfit) {
+        while (bankProfit > getBankProfit) {
             String fromAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
             String toAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
             double amount = 10.0 + (bank.getAccounts().get(fromAccountNumber).getMoney() - 10.0) * Math.random();

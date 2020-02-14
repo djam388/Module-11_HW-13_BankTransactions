@@ -4,8 +4,8 @@ public class Account
 {
     private double money;
     private String accNumber;
-    private boolean isActive;
-    private boolean isOnChecking;
+    private volatile boolean isActive;
+    private volatile boolean isBusy;
     private boolean found;
 
     public Account() {
@@ -15,7 +15,7 @@ public class Account
         this.money = money;
         this.accNumber = accNumber;
         this.isActive = true;
-        this.isOnChecking = false;
+        this.isBusy = false;
         this.found = false;
     }
 
@@ -53,12 +53,12 @@ public class Account
         isActive = active;
     }
 
-    public boolean isOnChecking() {
-        return isOnChecking;
+    public boolean isBusy() {
+        return isBusy;
     }
 
-    public void setOnChecking(boolean onChecking) {
-        isOnChecking = onChecking;
+    public void setBusy(boolean busy) {
+        isBusy = busy;
     }
 
     public boolean isFound() {
