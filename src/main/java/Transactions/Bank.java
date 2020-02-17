@@ -7,7 +7,7 @@ public class Bank
 {
     private volatile double bankProfit = 0.0;
     private double commission = 0.0;
-    private volatile HashMap<String, Account> accounts = new HashMap<>();
+    private HashMap<String, Account> accounts = new HashMap<>();
     private final Random random = new Random();
 
     public Bank(double commission)
@@ -29,7 +29,7 @@ public class Bank
         accounts.put(account.getAccNumber(), account);
     }
 
-    public synchronized boolean isFraud(String fromAccountNum, String toAccountNum, double amount)
+    public synchronized boolean isFraud()
         throws InterruptedException
     {
         Thread.sleep(1000);
@@ -44,37 +44,72 @@ public class Bank
      * счетов (как – на ваше усмотрение)
      */
     public void transfer(String fromAccountNum, String toAccountNum, double amount, String threadName) throws InterruptedException {
-        if (!accounts.get(fromAccountNum).isBusy() || !accounts.get(toAccountNum).isBusy()) {
-            if ((accounts.get(fromAccountNum).isActive() && accounts.get(toAccountNum).isActive())) {
-                accounts.get(fromAccountNum).setBusy(true);
-                accounts.get(toAccountNum).setBusy(true);
-                double profit = (amount * commission) / 100.0;
-                if (amount > 50000.0) {
-                    if (isFraud(fromAccountNum, toAccountNum, amount)) {
-
-                        accounts.get(fromAccountNum).setActive(false);
-                        accounts.get(toAccountNum).setActive(false);
-                        System.out.println("Поток номер: " + threadName + " Сомнительный перевод. Счета '"
-                                + fromAccountNum + "' и '" + toAccountNum + "' заблокированы!");
-                    }
-                }
-                bankProfit += profit;
-                accounts.get(fromAccountNum).deductMoney(profit + amount);
-                accounts.get(toAccountNum).addMoney(amount);
-                System.out.println("Поток номер: " + threadName + " Сумма перевода: " + amount + " ->> Комиссия банка: " + profit + " ->> Доход банка: " + getBankProfit());
-            }
-            else
-            {
-                System.out.println("Поток номер: " + threadName + " Перевод денег отклонено!");
-
-            }
-            accounts.get(fromAccountNum).setBusy(false);
-            accounts.get(toAccountNum).setBusy(false);
-        }
-        else
+        Account from = accounts.get(fromAccountNum);
+        Account to = accounts.get(fromAccountNum);
+        double profit = (amount * commission) / 100.0;
+        synchronized (from)
         {
-            System.out.println("Поток номер: " + threadName + " Счет(а) в процессе проверки!");
+            synchronized (to)
+            {
+                if (from.isActive() && to.isActive())
+                {
+                    if (amount > 50000.0)
+                    {
+                        if (isFraud()) {
+                            from.setActive(false);
+                            to.setActive(false);
+                            System.out.println("Поток номер: " + threadName + " Сомнительный перевод. Счета '"
+                                    + fromAccountNum + "' и '" + toAccountNum + "' заблокированы!");
+                        }
+                    }
+                    from.deductMoney(profit + amount);
+                    to.addMoney(amount);
+                    //bankProfit += profit;
+                    System.out.println("Поток номер: " + threadName
+                            + " Сумма перевода: " + amount
+                            + " ->> Комиссия банка: " + profit
+                            + " ->> Доход банка: " + getBankProfit());
+                }
+                else
+                {
+                    System.out.println("Поток номер: " + threadName + " Счет(а) в блоке. Перевод отменен!");
+                    profit = 0.0;
+                }
+            }
         }
+        bankProfit += profit;
+
+//        if (!accounts.get(fromAccountNum).isBusy() || !accounts.get(toAccountNum).isBusy()) {
+//            if ((accounts.get(fromAccountNum).isActive() && accounts.get(toAccountNum).isActive())) {
+//                accounts.get(fromAccountNum).setBusy(true);
+//                accounts.get(toAccountNum).setBusy(true);
+//                double profit = (amount * commission) / 100.0;
+//                if (amount > 50000.0) {
+//                    if (isFraud(fromAccountNum, toAccountNum, amount)) {
+//
+//                        accounts.get(fromAccountNum).setActive(false);
+//                        accounts.get(toAccountNum).setActive(false);
+//                        System.out.println("Поток номер: " + threadName + " Сомнительный перевод. Счета '"
+//                                + fromAccountNum + "' и '" + toAccountNum + "' заблокированы!");
+//                    }
+//                }
+//                bankProfit += profit;
+//                accounts.get(fromAccountNum).deductMoney(profit + amount);
+//                accounts.get(toAccountNum).addMoney(amount);
+//                System.out.println("Поток номер: " + threadName + " Сумма перевода: " + amount + " ->> Комиссия банка: " + profit + " ->> Доход банка: " + getBankProfit());
+//            }
+//            else
+//            {
+//                System.out.println("Поток номер: " + threadName + " Перевод денег отклонено!");
+//
+//            }
+//            accounts.get(fromAccountNum).setBusy(false);
+//            accounts.get(toAccountNum).setBusy(false);
+//        }
+//        else
+//        {
+//            System.out.println("Поток номер: " + threadName + " Счет(а) в процессе проверки!");
+//        }
     }
 
     /**
@@ -82,7 +117,7 @@ public class Bank
      */
     public double getBalance(String accountNum)
     {
-        accounts.get(accountNum).setBusy(true);
+        //accounts.get(accountNum).setBusy(true);
         return accounts.get(accountNum).getMoney();
     }
 }
