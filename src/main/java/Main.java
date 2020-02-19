@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
     private static final Random random = new Random();
@@ -24,13 +25,13 @@ public class Main {
         System.out.println("Введите сумму денег клиентов на депозите банка:");
         double totalDeposit = Double.parseDouble((new Scanner(System.in)).nextLine());
 
-        System.out.println("Введите комиссию банка за перевод:");
-        bankCommission = Double.parseDouble((new Scanner(System.in)).nextLine());
+//        System.out.println("Введите комиссию банка за перевод:");
+//        bankCommission = Double.parseDouble((new Scanner(System.in)).nextLine());
 
-        System.out.println("Введите ожидаемую сумму дохода банка от переводов:");
-        bankProfit = Double.parseDouble((new Scanner(System.in)).nextLine());
+//        System.out.println("Введите ожидаемую сумму дохода банка от переводов:");
+//        bankProfit = Double.parseDouble((new Scanner(System.in)).nextLine());
 
-        bank = new Bank(bankCommission);
+        bank = new Bank();
 
         generateAccounts(bank, totalDeposit);
 
@@ -43,7 +44,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();
         try {
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 10; i++)
             {
                 new Thread("" + (i + 1)){
                     @Override
@@ -60,24 +61,52 @@ public class Main {
         scanner = new Scanner(System.in);
         scanner.nextLine();
         System.out.printf("Всего денег в банке на счету у клиентов: %10.2f%n", checkTotalGeneratedValue(bank));
-        System.out.printf("Доход банка: %10.2f%n", bank.getBankProfit());
     }
     private static void startTranser(String threadName) {
-        double getBankProfit = 0.0;
-        while (bankProfit > getBankProfit) {
+        //double getBankProfit = 0.0;
+        AtomicInteger loop = new AtomicInteger();
+        AtomicInteger freq = new AtomicInteger();
+        AtomicInteger overSumCount = new AtomicInteger();
+        while (loop.get() < 1000) {
             String fromAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
             String toAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
-            double amount = 10.0 + (bank.getAccounts().get(fromAccountNumber).getMoney() - 10.0) * Math.random();
+            double balance = bank.getBalance(fromAccountNumber);
+
+            double amount = 10.0 + (balance - 10.0) * Math.random();
+            if (amount > 50000.0)
+            {
+                overSumCount.incrementAndGet();
+                if (overSumCount.get() > 50) // из 1000 -> 5% -> 50
+                {
+                    while (amount > 50000.0)
+                    {
+                        amount = 10.0 + (balance - 10.0) * Math.random();
+                    }
+                    overSumCount.decrementAndGet();
+                }
+                else if ((loop.get() % 10) !=0)
+                {
+                    while (amount > 50000.0)
+                    {
+                        amount = 10.0 + (balance - 10.0) * Math.random();
+                    }
+                    overSumCount.decrementAndGet();
+                }
+            }
             if (amount > 0.0)
             {
                 try {
-                    bank.transfer(fromAccountNumber, toAccountNumber, amount, threadName);
+                    bank.transfer(fromAccountNumber, toAccountNumber, amount,
+                            (threadName + "::" + loop + "(" + overSumCount +")"));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            getBankProfit = bank.getBankProfit();
+            loop.incrementAndGet();
         }
+        System.out.println("Номер потока: " + threadName
+                + " ->> Кол-во операций: " + loop
+                + " ->> Кол-во переводов с суммой боллее 50.000,00: " + overSumCount);
     }
 
     private static double checkTotalGeneratedValue(Bank bank)
