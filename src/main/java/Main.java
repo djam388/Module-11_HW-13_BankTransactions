@@ -2,6 +2,7 @@ import Transactions.Account;
 import Transactions.Bank;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,29 +15,20 @@ public class Main {
     private static double bankProfit = 0.0;
     private static double bankCommission = 0.0;
     private static Bank bank;
+    private static List<String> listOfAccounts = new ArrayList<>();
 
     public static void main(String[] args)
     {
-
-
-
         int numberOfClients = 0;
 
         System.out.println("Введите сумму денег клиентов на депозите банка:");
         double totalDeposit = Double.parseDouble((new Scanner(System.in)).nextLine());
-
-//        System.out.println("Введите комиссию банка за перевод:");
-//        bankCommission = Double.parseDouble((new Scanner(System.in)).nextLine());
-
-//        System.out.println("Введите ожидаемую сумму дохода банка от переводов:");
-//        bankProfit = Double.parseDouble((new Scanner(System.in)).nextLine());
 
         bank = new Bank();
 
         generateAccounts(bank, totalDeposit);
 
         System.out.println("Количество сгенерированных счетов: " + bank.getAccounts().size());
-        //System.out.printf("Всего денег в банке на счету у клиентов: %10.2f%n", checkTotalGeneratedValue(bank));
 
         System.out.println("Нажмите Enter для начала перевода денег. " +
                 "После окончания процесса перевода денег," +
@@ -46,21 +38,34 @@ public class Main {
         try {
             for (int i = 0; i < 10; i++)
             {
-                new Thread("" + (i + 1)){
+                new Thread("" + (i + 1))
+                {
                     @Override
-                    public void run() {
-                        startTranser(getName());
+                    public void run()
+                    {
+                        for (int j = 0; j < 1000; j++)
+                        {
+                            //String fromAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
+                            //String toAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
+                            double amount = 52000. * Math.random();
+                            try {
+                                bank.transfer(listOfAccounts, amount, this.getName());
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
                     }
                 }.start();
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         scanner = new Scanner(System.in);
         scanner.nextLine();
-        System.out.printf("Всего денег в банке на счету у клиентов: %10.2f%n", checkTotalGeneratedValue(bank));
+        System.out.printf("Всего денег в банке на счету у клиентов после переводов: %10.2f%n", checkTotalGeneratedValue(bank));
     }
     private static void startTranser(String threadName) {
         //double getBankProfit = 0.0;
@@ -96,10 +101,12 @@ public class Main {
             if (amount > 0.0)
             {
                 try {
-                    bank.transfer(fromAccountNumber, toAccountNumber, amount,
+                    bank.transfer(listOfAccounts, amount,
                             (threadName + "::" + loop + "(" + overSumCount +")"));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             }
             loop.incrementAndGet();
@@ -191,10 +198,11 @@ public class Main {
                     + " "
                     + Integer.toString(clientNumber).substring(2);
         }
+        listOfAccounts.add(accountNumber);
         return accountNumber;
     }
 
-    public static int randInt(int min, int max) {
+    private static int randInt(int min, int max) {
 
         int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
 

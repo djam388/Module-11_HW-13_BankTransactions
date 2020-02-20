@@ -8,6 +8,7 @@ public class Account
     private volatile boolean isBusy;
     private boolean found;
 
+
     public Account() {
     }
 
@@ -68,4 +69,6 @@ public class Account
     public void setFound(boolean found) {
         this.found = found;
     }
+
+    public static void test(){}
 }

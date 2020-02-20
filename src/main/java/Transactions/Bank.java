@@ -2,16 +2,15 @@ package Transactions;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Bank
 {
     private HashMap<String, Account> accounts = new HashMap<>();
     private final Random random = new Random();
 
-    public Bank()
-    {
-
-    }
+    public Bank(){}
 
     public HashMap<String, Account> getAccounts() {
         return accounts;
@@ -26,6 +25,7 @@ public class Bank
         throws InterruptedException
     {
         Thread.sleep(1000);
+
         return random.nextBoolean();
     }
 
@@ -36,35 +36,48 @@ public class Bank
      * метод isFraud. Если возвращается true, то делается блокировка
      * счетов (как – на ваше усмотрение)
      */
-    public void transfer(String fromAccountNum, String toAccountNum, double amount, String threadName) throws InterruptedException {
-        Account from = accounts.get(fromAccountNum);
-        Account to = accounts.get(fromAccountNum);
-        synchronized (from)
+    public void transfer(List<String> listOfAccounts, double amount, String threadName) throws Exception {
+        Account firstLock, secondLock;
+        int fromAccountNum, toAccountNum;
+        fromAccountNum =  ThreadLocalRandom.current().nextInt(0,  listOfAccounts.size() - 1);
+        toAccountNum = ThreadLocalRandom.current().nextInt(0,  listOfAccounts.size() - 1);
+        Account from = accounts.get(listOfAccounts.get(fromAccountNum));
+        Account to = accounts.get(listOfAccounts.get(toAccountNum));
+
+        if (fromAccountNum == toAccountNum)
         {
-            synchronized (to)
-            {
-                if (from.isActive() && to.isActive())
-                {
-                    if (amount > 50000.0)
-                    {
-                        if (isFraud()) {
-                            from.setActive(false);
-                            to.setActive(false);
-//                            System.out.println("Поток номер: " + threadName + " Сомнительный перевод. Счета '"
-//                                    + fromAccountNum + "' и '" + toAccountNum + "' заблокированы!");
+            throw new Exception("Нельзя переводить, отправитель и получатель должны быть разными!");
+        }
+        else if (fromAccountNum < toAccountNum)
+        {
+            firstLock = from;
+            secondLock = to;
+        }
+        else
+        {
+            firstLock = to;
+            secondLock = from;
+        }
+
+            synchronized (firstLock) {
+                synchronized (secondLock) {
+                    if (from.isActive() && to.isActive()) {
+                        if (amount > 50000.0)
+                        {
+                            if (isFraud()) {
+                                from.setActive(false);
+                                to.setActive(false);
+                                return;
+                            }
+                        }
+                        if (getBalance(from.getAccNumber()) > amount)
+                        {
+                            from.deductMoney(amount);
+                            to.addMoney(amount);
                         }
                     }
-                    from.deductMoney(amount);
-                    to.addMoney(amount);
-//                    System.out.println("Поток номер: " + threadName
-//                            + " Сумма перевода: " + amount);
-                }
-                else
-                {
-//                    System.out.println("Поток номер: " + threadName + " Счет(а) в блоке. Перевод отменен!");
                 }
             }
-        }
     }
 
     /**
