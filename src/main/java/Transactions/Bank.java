@@ -29,13 +29,6 @@ public class Bank
         return random.nextBoolean();
     }
 
-    /**
-     * TODO: реализовать метод. Метод переводит деньги между счетами.
-     * Если сумма транзакции > 50000, то после совершения транзакции,
-     * она отправляется на проверку Службе Безопасности – вызывается
-     * метод isFraud. Если возвращается true, то делается блокировка
-     * счетов (как – на ваше усмотрение)
-     */
     public void transfer(List<String> listOfAccounts, double amount, String threadName) throws Exception {
         Account firstLock, secondLock;
         int fromAccountNum, toAccountNum;
@@ -48,7 +41,8 @@ public class Bank
         {
             throw new Exception("Нельзя переводить, отправитель и получатель должны быть разными!");
         }
-        else if (fromAccountNum < toAccountNum)
+
+        if (fromAccountNum < toAccountNum)
         {
             firstLock = from;
             secondLock = to;
@@ -58,7 +52,6 @@ public class Bank
             firstLock = to;
             secondLock = from;
         }
-
             synchronized (firstLock) {
                 synchronized (secondLock) {
                     if (from.isActive() && to.isActive()) {
@@ -80,9 +73,6 @@ public class Bank
             }
     }
 
-    /**
-     * TODO: реализовать метод. Возвращает остаток на счёте.
-     */
     public double getBalance(String accountNum)
     {
         Account account = accounts.get(accountNum);
