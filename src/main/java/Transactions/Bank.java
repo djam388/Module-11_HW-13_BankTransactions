@@ -32,53 +32,38 @@ public class Bank
     public void transfer(List<String> listOfAccounts, double amount, String threadName) throws Exception {
         Account firstLock, secondLock;
         int fromAccountNum, toAccountNum;
-        fromAccountNum =  ThreadLocalRandom.current().nextInt(0,  listOfAccounts.size() - 1);
-        toAccountNum = ThreadLocalRandom.current().nextInt(0,  listOfAccounts.size() - 1);
+        fromAccountNum = ThreadLocalRandom.current().nextInt(0, listOfAccounts.size() - 1);
+        toAccountNum = ThreadLocalRandom.current().nextInt(0, listOfAccounts.size() - 1);
         Account from = accounts.get(listOfAccounts.get(fromAccountNum));
         Account to = accounts.get(listOfAccounts.get(toAccountNum));
 
-        if (fromAccountNum == toAccountNum)
-        {
+        if (fromAccountNum == toAccountNum) {
             throw new Exception("Нельзя переводить, отправитель и получатель должны быть разными!");
         }
 
-        if (fromAccountNum < toAccountNum)
-        {
+        if (fromAccountNum < toAccountNum) {
             firstLock = from;
             secondLock = to;
-        }
-        else
-        {
+        } else {
             firstLock = to;
             secondLock = from;
         }
-            synchronized (firstLock) {
-                synchronized (secondLock) {
-                    if (from.isActive() && to.isActive()) {
-                        if (amount > 50000.0)
-                        {
-                            if (isFraud()) {
-                                from.setActive(false);
-                                to.setActive(false);
-                                return;
-                            }
+        synchronized (firstLock) {
+            synchronized (secondLock) {
+                if (from.isActive() && to.isActive()) {
+                    if (amount > 50000.0) {
+                        if (isFraud()) {
+                            from.setActive(false);
+                            to.setActive(false);
+                            return;
                         }
-                        if (getBalance(from.getAccNumber()) > amount)
-                        {
-                            from.deductMoney(amount);
-                            to.addMoney(amount);
-                        }
+                    }
+                    if (from.getMoney() > amount) {
+                        from.deductMoney(amount);
+                        to.addMoney(amount);
                     }
                 }
             }
-    }
-
-    public double getBalance(String accountNum)
-    {
-        Account account = accounts.get(accountNum);
-        synchronized (account){
-            return accounts.get(accountNum).getMoney();
         }
-
     }
 }

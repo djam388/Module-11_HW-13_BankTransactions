@@ -45,8 +45,6 @@ public class Main {
                     {
                         for (int j = 0; j < 1000; j++)
                         {
-                            //String fromAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
-                            //String toAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
                             double amount = 52000. * Math.random();
                             try {
                                 bank.transfer(listOfAccounts, amount, this.getName());
@@ -66,54 +64,6 @@ public class Main {
         scanner = new Scanner(System.in);
         scanner.nextLine();
         System.out.printf("Всего денег в банке на счету у клиентов после переводов: %10.2f%n", checkTotalGeneratedValue(bank));
-    }
-    private static void startTranser(String threadName) {
-        //double getBankProfit = 0.0;
-        AtomicInteger loop = new AtomicInteger();
-        AtomicInteger freq = new AtomicInteger();
-        AtomicInteger overSumCount = new AtomicInteger();
-        while (loop.get() < 1000) {
-            String fromAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
-            String toAccountNumber = generateAccountNumber(randInt(1, bank.getAccounts().size()));
-            double balance = bank.getBalance(fromAccountNumber);
-
-            double amount = 10.0 + (balance - 10.0) * Math.random();
-            if (amount > 50000.0)
-            {
-                overSumCount.incrementAndGet();
-                if (overSumCount.get() > 50) // из 1000 -> 5% -> 50
-                {
-                    while (amount > 50000.0)
-                    {
-                        amount = 10.0 + (balance - 10.0) * Math.random();
-                    }
-                    overSumCount.decrementAndGet();
-                }
-                else if ((loop.get() % 10) !=0)
-                {
-                    while (amount > 50000.0)
-                    {
-                        amount = 10.0 + (balance - 10.0) * Math.random();
-                    }
-                    overSumCount.decrementAndGet();
-                }
-            }
-            if (amount > 0.0)
-            {
-                try {
-                    bank.transfer(listOfAccounts, amount,
-                            (threadName + "::" + loop + "(" + overSumCount +")"));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            loop.incrementAndGet();
-        }
-        System.out.println("Номер потока: " + threadName
-                + " ->> Кол-во операций: " + loop
-                + " ->> Кол-во переводов с суммой боллее 50.000,00: " + overSumCount);
     }
 
     private static double checkTotalGeneratedValue(Bank bank)
@@ -204,8 +154,6 @@ public class Main {
 
     private static int randInt(int min, int max) {
 
-        int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
-
-        return randomNum;
+        return ThreadLocalRandom.current().nextInt(min, max + 1);
     }
 }
